@@ -1,14 +1,14 @@
 from TaskDifficultyCalc import Task
 
 
-class Blueprint():
+class Blueprint:
     def __init__(self, nplayers, tasks=None, card_split=None):
         self.nplayers = nplayers
         if tasks is not None:
             try:
                 assert nplayers == len(tasks)
                 self.tasks = tasks
-            except:
+            except AssertionError:
                 raise ValueError('Number of tasks and number of players do not agree')
         else:
             self.tasks = tasks
@@ -17,19 +17,22 @@ class Blueprint():
             try:
                 assert nplayers == len(card_split)
                 self.card_split = card_split
-            except:
+            except AssertionError:
                 raise ValueError('Size of Cardsplit and number of players do not agree')
 
         else:
             self.card_split = card_split
-
 
     def make_random_tasks(self):
         tasks = []
         if self.card_split is None:
             self.make_card_split()
         for i in range(self.nplayers):
-            t = Task()
+            cards = self.card_split[i]
+            ncards = cards / 6
+            t = Task(ncards=ncards, hand_size=cards)
+            t.make_random_requirements()
+            tasks.append(t)
 
     def make_card_split(self, deck_size=104):
         cards = [0]*self.nplayers

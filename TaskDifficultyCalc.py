@@ -7,16 +7,16 @@ import random
 
 
 class Task:
-    def __init__(self, ncards, deck_size, task_hand=None):
+    def __init__(self, ncards, hand_size, task_hand=None):
         self.ncards = ncards
-        self.deck_size = deck_size
+        self.hand_size = hand_size
         self.task_hand = task_hand
         self.component_cards = []
         self.requirements = []
 
     def make_task_hand(self, deck):
         try:
-            cards = deck.draw(self.deck_size)
+            cards = deck.draw(self.hand_size)
             self.task_hand = Deck(cards=cards)
         except IndexError:
             print ("Empty Deck")
