@@ -14,6 +14,28 @@ class Task:
         self.component_cards = []
         self.requirements = []
 
+    def __repr__(self):
+        hand_size = str(self.hand_size)
+        ncards = str(self.ncards)
+        if self.task_hand is not None:
+            task_hand = str(self.task_hand)
+        else:
+            task_hand = 'No'
+
+        if len(self.component_cards) !=0:
+            component_cards = sum(self.component_cards)
+        else:
+            component_cards = 'No'
+
+        if len(self.requirements) !=0:
+            requirements = sum(self.requirements)
+        else:
+            requirements = 'no'
+
+        final_string = "A %s-sized Task requiring %s Cards with: %s Task Hand, %s Assembled " \
+                       "Components and %s Requirements" % (hand_size, ncards, task_hand, component_cards, requirements)
+        return final_string
+    
     def make_task_hand(self, deck):
         try:
             cards = deck.draw(self.hand_size)
@@ -143,7 +165,7 @@ class Suit_Requirement(TaskChecker):
     suit_list = ['S', 'C', 'D', 'H']
 
     def __init__(self, suits_set):
-        TaskChecker.__init__()
+        TaskChecker.__init__(self)
         self.suits_set = suits_set
 
     def check_suits(self, deck):
@@ -152,14 +174,14 @@ class Suit_Requirement(TaskChecker):
     def make_random_suit_requirement(self, ncards, nsuits):
         suits_list = []
         for i in range(ncards):
-            suits = random.sample(self.suits_set, nsuits)
+            suits = random.sample(self.suit_list, nsuits)
             suits_list.append(suits)
         return suits_list
 
 
 class Number_Requirement(TaskChecker):
     def __init__(self, number_requirement, value=None):
-        TaskChecker.__init__()
+        TaskChecker.__init__(self)
         self.number_requirement = number_requirement
         self.value = value
 
@@ -172,6 +194,6 @@ class Number_Requirement(TaskChecker):
                              'all_lt': self.all_lt, 'sum_gt': self.sum_gt, 'sum_lt': self.sum_lt}
 
         self.value = number
-        self.number_requirement = random.choice(requirements_list)
+        self.number_requirement = random.choice(requirements_list.values())
         if 'value' in inspect.getargspec(self.number_requirement).args:
             self.number_requirement = functools.partial(self.number_requirement, value=self.value)

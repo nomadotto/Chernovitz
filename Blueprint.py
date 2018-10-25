@@ -33,6 +33,7 @@ class Blueprint:
             t = Task(ncards=ncards, hand_size=cards)
             t.make_random_requirements()
             tasks.append(t)
+        self.tasks = tasks
 
     def make_card_split(self, deck_size=104):
         cards = [0]*self.nplayers
