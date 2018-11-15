@@ -22,12 +22,12 @@ class Task:
         else:
             task_hand = 'No'
 
-        if len(self.component_cards) !=0:
+        if len(self.component_cards) != 0:
             component_cards = sum(self.component_cards)
         else:
             component_cards = 'No'
 
-        if len(self.requirements) !=0:
+        if len(self.requirements) != 0:
             requirements = sum(self.requirements)
         else:
             requirements = 'no'
@@ -35,7 +35,7 @@ class Task:
         final_string = "A %s-sized Task requiring %s Cards with: %s Task Hand, %s Assembled " \
                        "Components and %s Requirements" % (hand_size, ncards, task_hand, component_cards, requirements)
         return final_string
-    
+
     def make_task_hand(self, deck):
         try:
             cards = deck.draw(self.hand_size)
@@ -168,6 +168,13 @@ class Suit_Requirement(TaskChecker):
         TaskChecker.__init__(self)
         self.suits_set = suits_set
 
+    def __repr__(self):
+        return str(self.suits_set)
+
+    def __add__(self, other):
+        if isinstance(other, Number_Requirement):
+            return str(other) + " and " + str(self)
+
     def check_suits(self, deck):
         return self.is_suit_set(deck, self.suits_set)
 
@@ -180,20 +187,36 @@ class Suit_Requirement(TaskChecker):
 
 
 class Number_Requirement(TaskChecker):
+
     def __init__(self, number_requirement, value=None):
+        self.requirements_list = {'all_odd': self.all_odd, 'all_even': self.all_even, 'all_prime': self.all_prime,
+                                  'all_gt': self.all_gt, 'sum_eq': self.sum_eq, 'none_prime': self.none_prime,
+                                  'all_lt': self.all_lt, 'sum_gt': self.sum_gt, 'sum_lt': self.sum_lt}
+
         TaskChecker.__init__(self)
-        self.number_requirement = number_requirement
+        self.req_name = number_requirement
         self.value = value
+        self.number_requirement = self.requirements_list[number_requirement]
+
+    def __repr__(self):
+        if self.value is not None:
+            return self.req_name + " with value " + str(self.value)
+        else:
+            return self.req_name
 
     def check_value(self, deck):
         return self.number_requirement(deck)
 
-    def make_random_number_requirement(self, number):
-        requirements_list = {'all_odd': self.all_odd, 'all_even': self.all_even, 'all_prime': self.all_prime,
-                             'all_gt': self.all_gt, 'sum_eq': self.sum_eq, 'none_prime': self.none_prime,
-                             'all_lt': self.all_lt, 'sum_gt': self.sum_gt, 'sum_lt': self.sum_lt}
+    def __add__(self, other):
+        if isinstance(other, Suit_Requirement):
+            return str(self) + " and " + str(other)
+        else:
+            raise ValueError
 
+    def make_random_number_requirement(self, number):
         self.value = number
-        self.number_requirement = random.choice(requirements_list.values())
+        self.req_name = random.choice(self.requirements_list.keys())
+        self.number_requirement = self.requirements_list[self.req_name]
         if 'value' in inspect.getargspec(self.number_requirement).args:
             self.number_requirement = functools.partial(self.number_requirement, value=self.value)
+
