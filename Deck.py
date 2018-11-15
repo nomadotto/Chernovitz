@@ -14,6 +14,9 @@ class Deck:
     def __iter__(self):
         return self
 
+    def __repr__(self):
+        return "A deck of " + str(len(self.cards))
+
     def __next__(self):
         if self.current >= len(self.cards):
             raise StopIteration

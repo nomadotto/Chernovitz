@@ -10,6 +10,9 @@ class Card:
         self.value = value
         self.suit = suit
 
+    def __repr__(self):
+        return str(self.value) + ' of ' + str(self.suit)
+
     def __gt__(self, other):
         val = self.get_value()
         if type(val) == tuple:
@@ -96,7 +99,7 @@ class Card:
         val = self.get_value()
         if type(val) == tuple:
             return True
-        for a in range(a, val):
+        for a in range(2, val):
             if a % val == 0:
                 return False
         return True
