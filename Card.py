@@ -1,8 +1,8 @@
-
+import itertools
 class Card:
-    value_map = {1:1,2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, 10:10,
+    value_map = {0:0, 2:2, 3:3, 4:4, 5:5, 6:6, 7:7, 8:8, 9:9, 10:10,
                  'J':10, 'Q':10, 'K':10, 'A':(1,11)}
-    suit_list = ['S', 'C', 'D', 'H']
+    suit_list = ['S', 'C', 'D', 'H', None]
 
     def __init__(self, value, suit):
         assert value in self.value_map.keys()
@@ -15,67 +15,123 @@ class Card:
 
     def __gt__(self, other):
         val = self.get_value()
+        if isinstance(other, Card):
+            otherval = other.get_value()
+            if isinstance(otherval, tuple):
+                otherval = otherval[0]
+        elif isinstance(other, int):
+            otherval = other
+        else:
+            otherval = None
         if type(val) == tuple:
-            if (val[0] > other) | (val[1] > other):
+            if (val[0] > otherval) | (val[1] > otherval):
                 return True
             else:
                 return False
         else:
-            return val > other
+            return val > otherval
 
     def __lt__(self, other):
         val = self.get_value()
+        if isinstance(other, Card):
+            otherval = other.get_value()
+            if isinstance(otherval, tuple):
+                otherval = otherval[1]
+        elif isinstance(other, int):
+            otherval = other
+        else:
+            otherval = None
         if type(val) == tuple:
-            if (val[0] < other) | (val[1] < other):
+            if (val[0] < otherval) | (val[1] < otherval):
                 return True
             else:
                 return False
         else:
-            return val < other
+            return val < otherval
 
     def __le__(self, other):
         val = self.get_value()
+        if isinstance(other, Card):
+            otherval = other.get_value()
+            if isinstance(otherval, tuple):
+                otherval = otherval[1]
+        elif isinstance(other, int):
+            otherval = other
+        else:
+            otherval = None
         if type(val) == tuple:
-            if (val[0] <= other) | (val[1] <= other):
+            if (val[0] <= otherval) | (val[1] <= otherval):
                 return True
             else:
                 return False
         else:
-            return val <= other
+            return val <= otherval
 
     def __ge__(self, other):
         val = self.get_value()
+        if isinstance(other, Card):
+            otherval = other.get_value()
+            if isinstance(otherval, tuple):
+                otherval = otherval[0]
+        elif isinstance(other, int):
+            otherval = other
+        else:
+            otherval = None
         if type(val) == tuple:
-            if (val[0] >= other) | (val[1] >= other):
+            if (val[0] >= otherval) | (val[1] >= otherval):
                 return True
             else:
                 return False
         else:
-            return val >= other
+            return val >= otherval
 
     def __eq__(self, other):
         val = self.get_value()
+        if isinstance(other, Card):
+            otherval = other.get_value()
+            if isinstance(otherval, tuple):
+                otherval = otherval[0]
+        elif isinstance(other, int):
+            otherval = other
+        else:
+            otherval = None
         if type(val) == tuple:
-            if (val[0] == other) | (val[1] == other):
+            if (val[0] == otherval) | (val[1] == otherval):
                 return True
             else:
                 return False
         else:
-            return val == other
+            return val == otherval
 
     def __add__(self, other):
         val = self.get_value()
-        if type(val) == tuple:
-            return val[0] + other, val[1] +other
+        if isinstance(other, Card):
+            otherval = other.get_value()
+            if isinstance(val, tuple) and isinstance(otherval, tuple):
+                return tuple(i+j for i, j in itertools.product(val, otherval))
+            elif isinstance(val, tuple) and isinstance(otherval, int):
+                return tuple(i + otherval for i in val)
+            elif isinstance(val, int) and isinstance(otherval, tuple):
+                return tuple(i + val for i in otherval)
+            else:
+                return val + otherval
         else:
-            return val + other
+            raise ValueError
 
     def __sub__(self, other):
         val = self.get_value()
-        if type(val) == tuple:
-            return val[0] + other, val[1] +other
+        if isinstance(other, Card):
+            otherval = other.get_value()
+            if isinstance(val, tuple) and isinstance(otherval, tuple):
+                return tuple(i-j for i, j in itertools.product(val, otherval))
+            elif isinstance(val, tuple) and isinstance(otherval, int):
+                return tuple(i - otherval for i in val)
+            elif isinstance(val, int) and isinstance(otherval, tuple):
+                return tuple(val-i for i in otherval)
+            else:
+                return val - otherval
         else:
-            return val + other
+            raise ValueError
 
     def get_value(self):
         val = self.value_map[self.value]
@@ -86,7 +142,7 @@ class Card:
         if type(val) == tuple:
             return False
         else:
-            return val % 2 ==0
+            return val % 2 == 0
 
     def is_odd(self):
         val = self.get_value()
@@ -100,7 +156,7 @@ class Card:
         if type(val) == tuple:
             return True
         for a in range(2, val):
-            if a % val == 0:
+            if val % a == 0:
                 return False
         return True
 

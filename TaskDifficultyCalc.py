@@ -4,7 +4,7 @@ import math
 from Card import Card
 from Deck import Deck
 import random
-
+import itertools
 
 class Task:
     def __init__(self, ncards, hand_size, task_hand=None):
@@ -28,12 +28,14 @@ class Task:
             component_cards = 'No'
 
         if len(self.requirements) != 0:
-            requirements = sum(self.requirements)
+            requirements = ""
+            for req in self.requirements:
+                requirements += ' ' + str(req)
         else:
             requirements = 'no'
 
         final_string = "A %s-sized Task requiring %s Cards with: %s Task Hand, %s Assembled " \
-                       "Components and %s Requirements" % (hand_size, ncards, task_hand, component_cards, requirements)
+                       "Components and %s Requirements \n" % (hand_size, ncards, task_hand, component_cards, requirements)
         return final_string
 
     def make_task_hand(self, deck):
@@ -44,7 +46,8 @@ class Task:
             print ("Empty Deck")
 
     def make_component(self):
-        component_cards = random.sample(self.task_hand, self.ncards)
+        self.task_hand.shuffle()
+        component_cards = self.task_hand.draw(self.ncards)
         self.component_cards = Deck(cards=component_cards)
 
     def make_random_requirements(self):
@@ -52,13 +55,23 @@ class Task:
         nr = self.make_random_number_requirement()
         self.requirements = [sr, nr]
 
+    def make_fixed_difficulty_requirements(self, lower_limit=.4, upper_limit=.6):
+        score = None
+        while (score is None) or ((score < lower_limit) and (score > upper_limit)):
+            self.make_random_requirements()
+            score = self.calc_generic_difficulty(display=False)
+
+        print self.requirements
+        print score
+        return score
+
     def set_requirements(self, requirements):
         self.requirements = requirements
 
     def check_component(self):
         comp_ok = True
         for req in self.requirements:
-            comp_ok = comp_ok & (req(self.component_cards))
+            comp_ok = comp_ok & req.check(self.component_cards)
         return comp_ok
 
     def make_random_suit_requirement(self, nsuits=None):
@@ -73,6 +86,29 @@ class Task:
         req = Number_Requirement(None)
         req.make_random_number_requirement(number)
         return req
+
+    def calc_specific_difficulty(self, Deck = None):
+        if Deck is None:
+            fresh_deck = Deck()
+            fresh_deck.make_default_deck()
+
+            Deck = fresh_deck.shuffle()
+
+    def calc_generic_difficulty(self, nruns=1e5, display=True):
+        attempts = [0, 0]
+        i = 0
+        while i < nruns:
+            deck = Deck()
+            deck.make_default_deck()
+            deck.shuffle()
+            self.make_task_hand(deck)
+            self.make_component()
+            status = self.check_component()
+            attempts[status] += 1
+            i += 1
+        if display:
+            print float(attempts[0]) / sum(attempts)
+        return float(attempts[0]) / sum(attempts)
 
 
 class TaskChecker:
@@ -105,15 +141,31 @@ class TaskChecker:
     @staticmethod
     def all_gt(deck, value):
         for card in deck:
-            if not card > value:
-                return False
+            val = card.get_value()
+            if isinstance(val, int):
+                if not val > value:
+                    return False
+            else:
+                for i in val:
+                    if i > val:
+                        return True
+                    else:
+                        return False
         return True
 
     @staticmethod
     def all_lt(deck, value):
         for card in deck:
-            if not card < value:
-                return False
+            val = card.get_value()
+            if isinstance(val, int):
+                if not val < value:
+                    return False
+            else:
+                for i in val:
+                    if i < val:
+                        return True
+                    else:
+                        return False
         return True
 
     @staticmethod
@@ -141,22 +193,41 @@ class TaskChecker:
 
     @staticmethod
     def sum_eq(deck, value):
-        if sum(deck) == value:
-            return True
+        total = deck.sum()
+
+        if isinstance(total, int):
+            if total == value:
+                return True
+            else:
+                return False
+        elif isinstance(total, tuple):
+            return value in total
         else:
             return False
 
     @staticmethod
     def sum_gt(deck, value):
-        if sum(deck) > value:
-            return True
+        total = deck.sum()
+        if isinstance(total, int):
+            if total > value:
+                return True
+            else:
+                return False
+        elif isinstance(total, tuple):
+            return True in [i > value for i in total]
         else:
             return False
 
     @staticmethod
     def sum_lt(deck, value):
-        if sum(deck) < value:
-            return True
+        total = deck.sum()
+        if isinstance(total, int):
+            if total < value:
+                return True
+            else:
+                return False
+        elif isinstance(total, tuple):
+            return True in [i < value for i in total]
         else:
             return False
 
@@ -175,7 +246,7 @@ class Suit_Requirement(TaskChecker):
         if isinstance(other, Number_Requirement):
             return str(other) + " and " + str(self)
 
-    def check_suits(self, deck):
+    def check(self, deck):
         return self.is_suit_set(deck, self.suits_set)
 
     def make_random_suit_requirement(self, ncards, nsuits):
@@ -183,7 +254,7 @@ class Suit_Requirement(TaskChecker):
         for i in range(ncards):
             suits = random.sample(self.suit_list, nsuits)
             suits_list.append(suits)
-        return suits_list
+        self.suits_set = suits_list
 
 
 class Number_Requirement(TaskChecker):
@@ -194,9 +265,12 @@ class Number_Requirement(TaskChecker):
                                   'all_lt': self.all_lt, 'sum_gt': self.sum_gt, 'sum_lt': self.sum_lt}
 
         TaskChecker.__init__(self)
-        self.req_name = number_requirement
         self.value = value
-        self.number_requirement = self.requirements_list[number_requirement]
+        self.req_name = number_requirement
+        if number_requirement is not None:
+            self.number_requirement = self.requirements_list[number_requirement]
+        else:
+            self.number_requirement = None
 
     def __repr__(self):
         if self.value is not None:
@@ -204,8 +278,16 @@ class Number_Requirement(TaskChecker):
         else:
             return self.req_name
 
-    def check_value(self, deck):
-        return self.number_requirement(deck)
+    def check(self, deck):
+        try:
+            num_req = self.number_requirement(deck)
+            return num_req
+        except TypeError as e:
+            print deck
+            print (self.number_requirement)
+            for card in deck:
+                print card
+            raise e
 
     def __add__(self, other):
         if isinstance(other, Suit_Requirement):
@@ -214,9 +296,11 @@ class Number_Requirement(TaskChecker):
             raise ValueError
 
     def make_random_number_requirement(self, number):
-        self.value = number
+        value = number
         self.req_name = random.choice(self.requirements_list.keys())
         self.number_requirement = self.requirements_list[self.req_name]
         if 'value' in inspect.getargspec(self.number_requirement).args:
-            self.number_requirement = functools.partial(self.number_requirement, value=self.value)
-
+            self.number_requirement = functools.partial(self.number_requirement, value=value)
+            self.value = value
+        else:
+            self.value = None
