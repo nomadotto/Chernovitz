@@ -122,7 +122,7 @@ class Deck:
         for card in self.cards:
             val = card.get_value()
             if isinstance(val, int) & isinstance(total, int):
-                total += card
+                total += val
             elif isinstance(val, tuple) & isinstance(total, int):
                 total = tuple(i + total for i in val)
             elif isinstance(val, int) & isinstance(total, tuple):

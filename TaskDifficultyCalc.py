@@ -23,7 +23,7 @@ class Task:
             task_hand = 'No'
 
         if len(self.component_cards) != 0:
-            component_cards = sum(self.component_cards)
+            component_cards = self.component_cards.sum()
         else:
             component_cards = 'No'
 
@@ -284,7 +284,7 @@ class Number_Requirement(TaskChecker):
             return num_req
         except TypeError as e:
             print deck
-            print (self.number_requirement)
+            print self
             for card in deck:
                 print card
             raise e
