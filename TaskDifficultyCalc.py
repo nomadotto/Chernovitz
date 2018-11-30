@@ -55,9 +55,9 @@ class Task:
         nr = self.make_random_number_requirement()
         self.requirements = [sr, nr]
 
-    def make_fixed_difficulty_requirements(self, lower_limit=.4, upper_limit=.6):
+    def make_fixed_difficulty_requirements(self, lower_limit=.05, upper_limit=.1):
         score = None
-        while (score is None) or ((score < lower_limit) and (score > upper_limit)):
+        while (score is None) or not((score > lower_limit) and (score < upper_limit)):
             self.make_random_requirements()
             score = self.calc_generic_difficulty(display=False)
 
@@ -106,9 +106,12 @@ class Task:
             status = self.check_component()
             attempts[status] += 1
             i += 1
+        assert sum(attempts)==nruns
+
         if display:
-            print float(attempts[0]) / sum(attempts)
-        return float(attempts[0]) / sum(attempts)
+            print float(attempts[1]) / sum(attempts)
+
+        return float(attempts[1]) / sum(attempts)
 
 
 class TaskChecker:

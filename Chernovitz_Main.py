@@ -2,7 +2,7 @@
 
 import Blueprint
 
-b = Blueprint.Blueprint(5)
+b = Blueprint.Blueprint(6)
 b.make_random_tasks()
 odds = []
 for task in b.tasks:
